@@ -1,28 +1,22 @@
-# Celestial Aim Panel — Android
+# FF Ultimate 2.0 PRO — Android
 
-Aplicativo Android nativo em Java com painel flutuante para demonstração e treino visual offline.
+Aplicativo Android nativo em Java com painel flutuante e círculo FOV estritamente visuais, para demonstração.
 
-## Recursos visuais
-- Painel flutuante que pode ser arrastado, minimizado e fechado.
-- Controles demonstrativos: assistência simulada, ESP visual, FOV e suavização.
-- Zona de treino configurada conceitualmente para a região do pescoço de alvos fictícios.
+## Recursos
+- Painel flutuante arrastável, minimizável e fechável.
+- Controles demonstrativos de aimbot, ESP, indicador de vida, FOV e suavização.
+- Círculo FOV visual ajustável.
+- Interface identificada como FF Ultimate 2.0 PRO.
 
-## Limites
-Este projeto não interage com Free Fire ou Free Fire MAX. Não captura a tela do jogo, não lê ou escreve memória de processos, não injeta código e não automatiza a mira. Os controles são apenas demonstrações visuais dentro do aplicativo.
+## Limites técnicos
+Os controles são apenas elementos de interface. O aplicativo não interage com Free Fire ou Free Fire MAX, não identifica jogadores, não captura a tela do jogo, não lê nem escreve memória de processos, não injeta bibliotecas e não automatiza a mira. Não há biblioteca nativa ffultimate neste projeto.
 
-## Compilar localmente
+## Compilar
 Requisitos: JDK 17, Android SDK Platform 35 e Gradle 8.9.
 
-```bash
-gradle --no-daemon assembleDebug
-```
+    gradle --no-daemon assembleDebug
 
-APK gerado em `app/build/outputs/apk/debug/app-debug.apk`.
+APK gerado em app/build/outputs/apk/debug/app-debug.apk.
 
-## Gerar APK pelo GitHub
-1. Abra a aba **Actions** deste repositório.
-2. Se necessário, habilite GitHub Actions.
-3. Execute **Build Android APK** com **Run workflow**, ou faça um novo push.
-4. Abra a execução concluída e baixe o artefato **CelestialAimPanel-debug**.
-
-O APK de depuração é um artefato de teste, não um lançamento assinado para Play Store.
+## Baixar pelo GitHub Actions
+Abra a aba Actions, selecione Build Android APK e baixe o artefato FF-Ultimate-2.0-PRO-debug após a execução concluir.
