@@ -2,61 +2,140 @@ package com.celestial.aimpanel;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.PixelFormat;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.view.Gravity;
+import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.SeekBar;
 import android.widget.TextView;
-import android.graphics.Color;
-import android.view.Gravity;
 
 public class MainActivity extends Activity {
-    private final int blue = Color.rgb(40, 190, 255);
+    private WindowManager windowManager;
+    private CirculoView circulo;
+    private float raio = 150f;
 
-    @Override public void onCreate(Bundle state) {
+    @Override
+    public void onCreate(Bundle state) {
         super.onCreate(state);
-        LinearLayout root = new LinearLayout(this);
-        root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(28, 36, 28, 28);
-        root.setBackgroundColor(Color.rgb(12, 18, 30));
+        windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
 
-        TextView title = new TextView(this);
-        title.setText("CELESTIAL AIM PANEL");
-        title.setTextColor(blue);
-        title.setTextSize(23);
-        title.setGravity(Gravity.CENTER);
-        title.setPadding(0, 8, 0, 18);
-        root.addView(title);
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(40, 60, 40, 40);
+        layout.setBackgroundColor(Color.rgb(12, 18, 30));
 
-        TextView info = new TextView(this);
-        info.setText("Painel flutuante de treinamento visual. Os recursos são demonstrativos e não interagem com o Free Fire.");
-        info.setTextColor(Color.WHITE);
-        info.setTextSize(15);
-        info.setPadding(0, 0, 0, 20);
-        root.addView(info);
+        TextView titulo = new TextView(this);
+        titulo.setText("Painel FF — círculo de FOV");
+        titulo.setTextColor(Color.rgb(40, 190, 255));
+        titulo.setTextSize(22f);
 
-        Button start = new Button(this);
-        start.setText("ATIVAR PAINEL FLUTUANTE");
-        start.setTextColor(Color.WHITE);
-        start.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.rgb(0, 115, 175)));
-        root.addView(start);
-        start.setOnClickListener(v -> {
+        TextView instrucoes = new TextView(this);
+        instrucoes.setText("Ajuste o tamanho e toque em Ativar. O círculo é visual e não controla a mira.");
+        instrucoes.setTextColor(Color.WHITE);
+        instrucoes.setTextSize(16f);
+        instrucoes.setPadding(0, 20, 0, 20);
+
+        SeekBar tamanho = new SeekBar(this);
+        tamanho.setMax(300);
+        tamanho.setProgress(100);
+        tamanho.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                raio = 50f + progress;
+                if (circulo != null) {
+                    circulo.raio = raio;
+                    circulo.invalidate();
+                }
+            }
+            @Override public void onStartTrackingTouch(SeekBar seekBar) {}
+            @Override public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
+
+        Button ativar = new Button(this);
+        ativar.setText("Ativar círculo");
+        ativar.setOnClickListener(v -> {
             if (Build.VERSION.SDK_INT >= 23 && !Settings.canDrawOverlays(this)) {
-                Intent permission = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName()));
-                startActivity(permission);
+                Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    Uri.parse("package:" + getPackageName()));
+                startActivity(intent);
             } else {
-                startService(new Intent(this, OverlayService.class));
-                finish();
+                mostrarCirculo();
             }
         });
 
-        TextView note = new TextView(this);
-        note.setText("\nComo usar:\n1. Permita 'Aparecer sobre outros apps'.\n2. Volte ao app e ative o painel.\n3. Arraste o painel pela barra superior.\n4. Feche pelo botão X.");
-        note.setTextColor(Color.LTGRAY);
-        note.setTextSize(14);
-        root.addView(note);
-        setContentView(root);
+        Button desativar = new Button(this);
+        desativar.setText("Desativar círculo");
+        desativar.setOnClickListener(v -> removerCirculo());
+
+        layout.addView(titulo);
+        layout.addView(instrucoes);
+        layout.addView(tamanho);
+        layout.addView(ativar);
+        layout.addView(desativar);
+        setContentView(layout);
+    }
+
+    private void mostrarCirculo() {
+        if (circulo != null) return;
+        CirculoView view = new CirculoView();
+        view.raio = raio;
+
+        int tipoJanela = Build.VERSION.SDK_INT >= 26
+            ? WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+            : WindowManager.LayoutParams.TYPE_PHONE;
+
+        WindowManager.LayoutParams params = new WindowManager.LayoutParams(
+            WindowManager.LayoutParams.MATCH_PARENT,
+            WindowManager.LayoutParams.MATCH_PARENT,
+            tipoJanela,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+                | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+                | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+            PixelFormat.TRANSLUCENT
+        );
+        params.gravity = Gravity.TOP | Gravity.START;
+        windowManager.addView(view, params);
+        circulo = view;
+    }
+
+    private void removerCirculo() {
+        if (circulo != null) {
+            try {
+                windowManager.removeView(circulo);
+            } catch (IllegalArgumentException ignored) {}
+            circulo = null;
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        removerCirculo();
+        super.onDestroy();
+    }
+
+    private class CirculoView extends View {
+        float raio = 150f;
+        private final Paint pintura = new Paint(Paint.ANTI_ALIAS_FLAG);
+
+        CirculoView() {
+            super(MainActivity.this);
+            pintura.setColor(Color.MAGENTA);
+            pintura.setStyle(Paint.Style.STROKE);
+            pintura.setStrokeWidth(4f);
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            super.onDraw(canvas);
+            canvas.drawCircle(getWidth() / 2f, getHeight() / 2f, raio, pintura);
+        }
     }
 }
