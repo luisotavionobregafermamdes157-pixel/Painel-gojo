@@ -37,7 +37,7 @@ public class OverlayService extends Service {
         LinearLayout top = new LinearLayout(this);
         top.setGravity(Gravity.CENTER_VERTICAL);
         TextView title = new TextView(this);
-        title.setText("CELESTIAL  •  AIM TRAINER");
+        title.setText("FF ULTIMATE 2.0 PRO");
         title.setTextColor(cyan);
         title.setTextSize(13);
         title.setPadding(4, 8, 8, 8);
